@@ -13,7 +13,9 @@ namespace Microsoft.AspNet.Mvc
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly IControllerActivator _controllerActivator;
-        private static ConcurrentDictionary<Type, ObjectFactory> _controllerCache =
+        private static readonly Func<Type, ObjectFactory> CreateFactory =
+            (t) => ActivatorUtilities.CreateFactory(t, Type.EmptyTypes);
+        private static ConcurrentDictionary<Type, ObjectFactory> _controllerCreatorCache =
             new ConcurrentDictionary<Type, ObjectFactory>();
 
         public DefaultControllerFactory(IServiceProvider serviceProvider,
@@ -36,9 +38,8 @@ namespace Microsoft.AspNet.Mvc
 
             var controllerType = actionDescriptor.ControllerTypeInfo.AsType();
 
-            var fact = _controllerCache.GetOrAdd(controllerType,
-                ActivatorUtilities.CreateFactory(controllerType, Type.EmptyTypes));
-            var controller = fact(_serviceProvider, null);
+            var controllerFactory = _controllerCreatorCache.GetOrAdd(controllerType, CreateFactory);
+            var controller = controllerFactory(_serviceProvider, null);
 
             _controllerActivator.Activate(controller, actionContext);
 
