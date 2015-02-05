@@ -1529,5 +1529,28 @@ namespace Microsoft.AspNet.Mvc.FunctionalTests
             var body = await response.Content.ReadAsStringAsync();
             Assert.Equal(expectedContent, body);
         }
+
+        [Fact]
+        public async Task TryUpdateModelIncludesAllProperties_CanBind()
+        {
+            // Arrange
+            var server = TestServer.Create(_services, _app);
+            var client = server.CreateClient();
+
+            // Act
+            var response = await client.GetStringAsync("http://localhost/TryUpdateModel/" +
+                "GetUserAsync_ModelType_IncludeAll" +
+                "?id=123&RegisterationMonth=March&Key=123&UserName=SomeName");
+
+            // Assert
+            var user = JsonConvert.DeserializeObject<User>(response);
+
+            // Should not update any not explicitly mentioned properties.
+            Assert.Equal("SomeName", user.UserName);
+            Assert.Equal(123, user.Key);
+
+            // Should Update all included properties.
+            Assert.Equal("March", user.RegisterationMonth);
+        }
     }
 }
