@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using Microsoft.AspNet.Razor.Runtime.TagHelpers;
 using Microsoft.Framework.Logging;
@@ -23,15 +24,24 @@ namespace Microsoft.AspNet.Mvc.TagHelpers
         /// </summary>
         /// <param name="uniqueId">The unique ID of the HTML element this message applies to.</param>
         /// <param name="missingAttributes">The missing required attributes.</param>
-        public MissingAttributeLoggerStructure(string uniqueId, IEnumerable<string> missingAttributes)
+        /// <param name="extraValues">Extra values to include in the log structure.</param>
+        public MissingAttributeLoggerStructure(string uniqueId, IEnumerable<string> missingAttributes, IDictionary<string, object> extraValues = null)
         {
             _uniqueId = uniqueId;
             _missingAttributes = missingAttributes;
-            _values = new Dictionary<string, object>
+            var values = new Dictionary<string, object>
             {
                 { "UniqueId", _uniqueId },
                 { "MissingAttributes", _missingAttributes }
             };
+            if (extraValues != null)
+            {
+                foreach (var kvp in extraValues)
+                {
+                    values[kvp.Key] = kvp.Value;
+                }
+            }
+            _values = values;
         }
 
         /// <summary>
@@ -41,7 +51,7 @@ namespace Microsoft.AspNet.Mvc.TagHelpers
         {
             get
             {
-                return "Tag Helper skipped due to missing required attributes.";
+                return "Tag Helper has missing required attributes.";
             }
         }
 
