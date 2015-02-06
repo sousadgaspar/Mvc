@@ -4,10 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Runtime.Serialization;
-using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.AspNet.Mvc.Internal;
@@ -63,20 +60,6 @@ namespace Microsoft.AspNet.Mvc.Xml
         public XmlDictionaryReaderQuotas XmlDictionaryReaderQuotas
         {
             get { return _readerQuotas; }
-        }
-
-        /// <inheritdoc />
-        public override bool CanRead(InputFormatterContext context)
-        {
-            var contentType = context.ActionContext.HttpContext.Request.ContentType;
-            MediaTypeHeaderValue requestContentType;
-            if (!MediaTypeHeaderValue.TryParse(contentType, out requestContentType))
-            {
-                return false;
-            }
-
-            return SupportedMediaTypes
-                            .Any(supportedMediaType => supportedMediaType.IsSubsetOf(requestContentType));
         }
 
         /// <summary>

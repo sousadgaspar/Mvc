@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNet.Mvc.Core;
 using Microsoft.Net.Http.Headers;
 
 namespace Microsoft.AspNet.Mvc
@@ -24,16 +25,16 @@ namespace Microsoft.AspNet.Mvc
 
         /// <summary>
         /// Gets the mutable collection of character encodings supported by
-        /// this <see cref="OutputFormatter"/>. The encodings are
+        /// this <see cref="InputFormatter"/>. The encodings are
         /// used when writing the data.
         /// </summary>
-        public IList<Encoding> SupportedEncodings { get; private set; }
+        public IList<Encoding> SupportedEncodings { get; }
 
         /// <summary>
         /// Gets the mutable collection of <see cref="MediaTypeHeaderValue"/> elements supported by
-        /// this <see cref="OutputFormatter"/>.
+        /// this <see cref="InputFormatter"/>.
         /// </summary>
-        public IList<MediaTypeHeaderValue> SupportedMediaTypes { get; private set; }
+        public IList<MediaTypeHeaderValue> SupportedMediaTypes { get; }
 
         protected object GetDefaultValueForType(Type modelType)
         {
@@ -60,7 +61,7 @@ namespace Microsoft.AspNet.Mvc
         }
 
         /// <inheritdoc />
-        public async Task<object> ReadAsync(InputFormatterContext context)
+        public virtual async Task<object> ReadAsync(InputFormatterContext context)
         {
             var request = context.ActionContext.HttpContext.Request;
             if (request.ContentLength == 0)
@@ -77,5 +78,34 @@ namespace Microsoft.AspNet.Mvc
         /// <param name="context">The <see cref="InputFormatterContext"/> associated with the call.</param>
         /// <returns>A task which can read the request body.</returns>
         public abstract Task<object> ReadRequestBodyAsync(InputFormatterContext context);
+
+        /// <summary>
+        /// Returns encoding based on content type charset parameter.
+        /// </summary>
+        protected Encoding SelectCharacterEncoding(MediaTypeHeaderValue contentType)
+        {
+            if (contentType != null)
+            {
+                var charset = contentType.Charset;
+                if (!string.IsNullOrWhiteSpace(contentType.Charset))
+                {
+                    foreach (var supportedEncoding in SupportedEncodings)
+                    {
+                        if (string.Equals(charset, supportedEncoding.WebName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            return supportedEncoding;
+                        }
+                    }
+                }
+            }
+
+            if (SupportedEncodings.Count > 0)
+            {
+                return SupportedEncodings[0];
+            }
+
+            // No supported encoding was found so there is no way for us to start reading.
+            throw new InvalidOperationException(Resources.FormatInputFormatterNoEncoding(GetType().FullName));
+        }
     }
 }

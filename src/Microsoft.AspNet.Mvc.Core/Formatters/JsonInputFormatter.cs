@@ -2,13 +2,9 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Mvc.Core;
 using Microsoft.Net.Http.Headers;
 using Newtonsoft.Json;
 
@@ -133,33 +129,6 @@ namespace Microsoft.AspNet.Mvc
         public virtual JsonSerializer CreateJsonSerializer()
         {
             return JsonSerializer.Create(SerializerSettings);
-        }
-
-        private Encoding SelectCharacterEncoding(MediaTypeHeaderValue contentType)
-        {
-            if (contentType != null)
-            {
-                // Find encoding based on content type charset parameter
-                var charset = contentType.Charset;
-                if (!string.IsNullOrWhiteSpace(contentType.Charset))
-                {
-                    foreach (var supportedEncoding in SupportedEncodings)
-                    {
-                        if (string.Equals(charset, supportedEncoding.WebName, StringComparison.OrdinalIgnoreCase))
-                        {
-                            return supportedEncoding;
-                        }
-                    }
-                }
-            }
-
-            if (SupportedEncodings.Count > 0)
-            {
-                return SupportedEncodings[0];
-            }
-
-            // No supported encoding was found so there is no way for us to start reading.
-            throw new InvalidOperationException(Resources.FormatInputFormatterNoEncoding(GetType().FullName));
         }
     }
 }
